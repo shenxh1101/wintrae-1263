@@ -7,6 +7,8 @@ declare global {
       selectAudio: () => Promise<string | null>;
       saveFile: (content: string, defaultName: string) => Promise<string | null>;
       readFile: (filePath: string) => Promise<string | null>;
+      checkFileExists: (filePath: string) => Promise<boolean>;
+      checkFilesExist: (filePaths: string[]) => Promise<{ [path: string]: boolean }>;
     };
   }
 }

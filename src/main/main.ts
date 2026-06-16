@@ -93,3 +93,23 @@ ipcMain.handle('read-file', async (_event, filePath: string) => {
     return null;
   }
 });
+
+ipcMain.handle('check-file-exists', async (_event, filePath: string) => {
+  try {
+    return fs.existsSync(filePath);
+  } catch {
+    return false;
+  }
+});
+
+ipcMain.handle('check-files-exist', async (_event, filePaths: string[]) => {
+  const result: { [path: string]: boolean } = {};
+  for (const p of filePaths) {
+    try {
+      result[p] = fs.existsSync(p);
+    } catch {
+      result[p] = false;
+    }
+  }
+  return result;
+});
