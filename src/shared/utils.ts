@@ -254,9 +254,24 @@ export interface TourValidationSummary {
   standardAudioMissing: { [language: string]: number };
   childAudioMissing: { [language: string]: number };
   extendedAudioMissing: number;
+  extendedAudioBroken: number;
+  standardAudioBroken: number;
+  childAudioBroken: number;
   brokenAudioPaths: number;
   score: number;
 }
+
+export interface ExportBatchRecord {
+  id: string;
+  exportedAt: number;
+  exhibitionId: string;
+  exhibitionName: string;
+  options: TourExportOptions;
+  validation: TourValidationSummary;
+  filename?: string;
+}
+
+export const EMPTY_BATCH_HISTORY_KEY = 'export_batch_history_v1';
 
 export interface TourExportOptions {
   languages: string[];
@@ -293,6 +308,9 @@ export const buildTourValidation = (
   const standardAudioMissing: { [language: string]: number } = {};
   const childAudioMissing: { [language: string]: number } = {};
   let extendedAudioMissing = 0;
+  let extendedAudioBroken = 0;
+  let standardAudioBroken = 0;
+  let childAudioBroken = 0;
   let brokenAudioPaths = 0;
 
   languages.forEach((l) => {
@@ -313,16 +331,25 @@ export const buildTourValidation = (
     const status = getExhibitAudioStatus(exhibit, languages, fileValidity);
     languages.forEach((lang) => {
       if (!status.standard[lang].isComplete) standardAudioMissing[lang]++;
-      if (status.standard[lang].isPathValid === false) brokenAudioPaths++;
+      if (status.standard[lang].isPathValid === false) {
+        standardAudioBroken++;
+        brokenAudioPaths++;
+      }
       if (status.child) {
         if (!status.child[lang].isComplete) childAudioMissing[lang]++;
-        if (status.child[lang].isPathValid === false) brokenAudioPaths++;
+        if (status.child[lang].isPathValid === false) {
+          childAudioBroken++;
+          brokenAudioPaths++;
+        }
       }
     });
     status.extended.forEach((story) => {
       languages.forEach((lang) => {
         if (!story.audio[lang].isComplete) extendedAudioMissing++;
-        if (story.audio[lang].isPathValid === false) brokenAudioPaths++;
+        if (story.audio[lang].isPathValid === false) {
+          extendedAudioBroken++;
+          brokenAudioPaths++;
+        }
       });
     });
   });
@@ -341,6 +368,9 @@ export const buildTourValidation = (
     standardAudioMissing,
     childAudioMissing,
     extendedAudioMissing,
+    extendedAudioBroken,
+    standardAudioBroken,
+    childAudioBroken,
     brokenAudioPaths,
     score: Math.max(0, Math.min(100, score)),
   };
@@ -421,13 +451,25 @@ export const exportChecklist = (
   languages: string[],
   fileValidity?: { [path: string]: boolean }
 ): string => {
-  let csv = '序号,编号,展品名称,展厅,建议时长(秒),重点展品,';
+  const maxStories = Math.max(
+    0,
+    ...exhibition.exhibits.map((e) => (e.extendedStories?.length ? e.extendedStories.length : 0))
+  );
+
+  let csv = '序号,编号,展品名称,展厅,建议时长(秒),重点展品,封面,';
   csv += languages.map((l) => `${l}标准文本`).join(',');
   csv += ',';
   csv += languages.map((l) => `${l}标准音频`).join(',');
   csv += ',儿童版,';
   csv += languages.map((l) => `${l}儿童音频`).join(',');
-  csv += ',延伸故事数量\n';
+  csv += ',延伸故事数';
+  for (let i = 0; i < maxStories; i++) {
+    csv += `,故事${i + 1}标题`;
+    languages.forEach((l) => {
+      csv += `,故事${i + 1}_${l}_音频`;
+    });
+  }
+  csv += '\n';
 
   const sortedRoute = [...exhibition.route].sort((a, b) => a.order - b.order);
 
@@ -444,6 +486,7 @@ export const exportChecklist = (
       routeItem.hall,
       exhibit.suggestedDuration,
       exhibit.isHighlight ? '是' : '否',
+      exhibit.coverImage ? '有' : '无',
     ];
 
     languages.forEach((lang) => {
@@ -470,7 +513,28 @@ export const exportChecklist = (
       }
     });
 
-    row.push(status.extended.length);
+    const storyCount = status.extended.length;
+    row.push(storyCount);
+    for (let i = 0; i < maxStories; i++) {
+      const story = status.extended[i];
+      if (!story) {
+        row.push('—');
+        languages.forEach(() => row.push('—'));
+        continue;
+      }
+      row.push(`"${(story.title || '').replace(/"/g, '""')}"`);
+      languages.forEach((lang) => {
+        if (story.audio[lang].isPathValid === false) {
+          row.push('!失效');
+        } else if (story.audio[lang].hasAudio) {
+          row.push('✓');
+        } else if (story.audio[lang].hasText) {
+          row.push('文');
+        } else {
+          row.push('✗');
+        }
+      });
+    }
 
     csv += row.join(',') + '\n';
   });
@@ -571,9 +635,19 @@ export const exportPublishChecklist = (
 
     if (status.extended.length > 0) {
       content += `     延伸故事: ${status.extended.length} 个\n`;
-      status.extended.forEach((story) => {
-        const completeCount = languages.filter((l) => story.audio[l].hasAudio).length;
-        content += `       - ${story.title}: ${completeCount}/${languages.length} 种语言完整\n`;
+      status.extended.forEach((story, si) => {
+        const completeCount = languages.filter((l) => story.audio[l].hasAudio && story.audio[l].isPathValid !== false).length;
+        const brokenCount = languages.filter((l) => story.audio[l].isPathValid === false).length;
+        const missingCount = languages.filter((l) => !story.audio[l].hasAudio && story.audio[l].isPathValid !== false).length;
+        content += `       故事${si + 1}: ${story.title}  [完整:${completeCount} 缺音:${missingCount} 失效:${brokenCount}]\n`;
+        languages.forEach((lang) => {
+          const es = story.audio[lang];
+          let emark = '✓';
+          if (es.isPathValid === false) emark = '!路径失效';
+          else if (!es.hasAudio && es.hasText) emark = '有文无音';
+          else if (!es.hasAudio) emark = '✗缺失';
+          content += `         ${lang}: ${emark}\n`;
+        });
       });
     }
     content += '\n';
@@ -596,6 +670,16 @@ export const exportPublishChecklist = (
       (s) => s.standard[lang].isPathValid === false
     ).length;
     const childBroken = allStatuses.filter((s) => s.child?.[lang].isPathValid === false).length;
+    let extStoriesTotal = 0;
+    let extStoriesComplete = 0;
+    let extStoriesBroken = 0;
+    allStatuses.forEach((s) => {
+      s.extended.forEach((story) => {
+        extStoriesTotal++;
+        if (story.audio[lang].isComplete && story.audio[lang].isPathValid !== false) extStoriesComplete++;
+        if (story.audio[lang].isPathValid === false) extStoriesBroken++;
+      });
+    });
 
     content += `【${lang}】\n`;
     content += `  标准版: ${standardComplete}/${pkg.totalExhibits} 件完整 (${Math.round(
@@ -610,8 +694,24 @@ export const exportPublishChecklist = (
       if (childBroken > 0) content += ` ⚠️ ${childBroken} 件路径失效`;
       content += '\n';
     }
+    if (extStoriesTotal > 0) {
+      content += `  延伸故事: ${extStoriesComplete}/${extStoriesTotal} 条完整 (${Math.round(
+        (extStoriesComplete / extStoriesTotal) * 100
+      )}%)`;
+      if (extStoriesBroken > 0) content += ` ⚠️ ${extStoriesBroken} 条路径失效`;
+      content += '\n';
+    }
     content += '\n';
   });
+
+  if (validation.brokenAudioPaths > 0) {
+    content += '----------------------------------------\n';
+    content += '  ⚠️  失效音频路径汇总\n';
+    content += '----------------------------------------\n\n';
+    content += `  标准版失效: ${validation.standardAudioBroken} 个\n`;
+    content += `  儿童版失效: ${validation.childAudioBroken} 个\n`;
+    content += `  延伸故事失效: ${validation.extendedAudioBroken} 个\n\n`;
+  }
 
   return content;
 };

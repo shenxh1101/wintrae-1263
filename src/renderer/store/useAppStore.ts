@@ -15,6 +15,7 @@ import {
   cloneExhibition,
   generateId,
   createEmptyAudio,
+  ExportBatchRecord,
 } from '@shared/utils';
 
 interface StoreState extends AppState {
@@ -51,6 +52,9 @@ interface StoreState extends AppState {
   updateRouteItemHall: (exhibitionId: string, routeItemId: string, hall: string) => void;
   getCurrentExhibition: () => Exhibition | undefined;
   getCurrentExhibit: () => Exhibit | undefined;
+  exportBatchHistory: ExportBatchRecord[];
+  addExportBatch: (batch: ExportBatchRecord) => void;
+  clearExportBatchHistory: () => void;
 }
 
 export const useAppStore = create<StoreState>()(
@@ -61,6 +65,11 @@ export const useAppStore = create<StoreState>()(
       currentWindow: 'overview',
       currentExhibitId: null,
       selectedLanguages: [DEFAULT_LANGUAGE],
+      exportBatchHistory: [],
+
+      addExportBatch: (batch) =>
+        set((state) => ({ exportBatchHistory: [batch, ...state.exportBatchHistory].slice(0, 50) })),
+      clearExportBatchHistory: () => set({ exportBatchHistory: [] }),
 
       setCurrentWindow: (window) => set({ currentWindow: window }),
       setCurrentExhibition: (id) => set({ currentExhibitionId: id, currentExhibitId: null }),
