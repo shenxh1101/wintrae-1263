@@ -1,0 +1,263 @@
+.route-panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  gap: 16px;
+}
+
+.route-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.route-header h2 {
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.route-layout {
+  display: flex;
+  gap: 20px;
+  flex: 1;
+  min-height: 0;
+}
+
+.route-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.route-sidebar {
+  width: 340px;
+  flex-shrink: 0;
+}
+
+.hall-group {
+  margin-bottom: 20px;
+}
+
+.hall-group-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: #f8fafc;
+  border-radius: 6px;
+  margin-bottom: 8px;
+}
+
+.hall-name {
+  font-weight: 600;
+  color: #1e293b;
+  font-size: 14px;
+}
+
+.hall-count {
+  font-size: 12px;
+  color: #64748b;
+}
+
+.hall-items {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-left: 8px;
+}
+
+.route-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  background: white;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  transition: all 0.2s;
+  cursor: grab;
+}
+
+.route-item:active {
+  cursor: grabbing;
+}
+
+.route-item:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.route-item.highlight {
+  border-color: #f59e0b;
+  background: linear-gradient(to right, #fffbeb, white);
+}
+
+.route-item.dragging {
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+  border-color: #2563eb;
+  opacity: 0.95;
+}
+
+.drag-handle {
+  color: #94a3b8;
+  font-size: 18px;
+  padding: 4px;
+  cursor: grab;
+  user-select: none;
+}
+
+.route-item-index {
+  width: 28px;
+  height: 28px;
+  background: #3b82f6;
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.route-item.highlight .route-item-index {
+  background: #f59e0b;
+}
+
+.route-item-thumb {
+  width: 48px;
+  height: 48px;
+  border-radius: 6px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.route-item-thumb.placeholder {
+  background: #f1f5f9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+}
+
+.route-item-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.route-item-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: #1e293b;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.route-item-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 2px;
+  font-size: 12px;
+  color: #64748b;
+}
+
+.hall-select {
+  width: 120px;
+  flex-shrink: 0;
+}
+
+.remove-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  color: #94a3b8;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.remove-btn:hover {
+  background: #fee2e2;
+  color: #ef4444;
+}
+
+.unassigned-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.unassigned-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px;
+  background: #f8fafc;
+  border-radius: 8px;
+  transition: background 0.2s;
+}
+
+.unassigned-item:hover {
+  background: #f1f5f9;
+}
+
+.unassigned-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.unassigned-info .exhibit-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: #1e293b;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.unassigned-info .exhibit-code {
+  font-size: 12px;
+  color: #64748b;
+  font-family: monospace;
+}
+
+.hall-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.hall-tag {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: #eff6ff;
+  color: #1e40af;
+  border-radius: 16px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.tag-remove {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: rgba(30, 64, 175, 0.1);
+  color: #1e40af;
+  font-size: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.tag-remove:hover {
+  background: #ef4444;
+  color: white;
+}
