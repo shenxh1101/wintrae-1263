@@ -763,6 +763,18 @@ function PreviewPanel() {
                   </div>
                   {isExpanded && (
                     <div className="check-expand-body">
+                      <div className="expand-row-actions">
+                        <button
+                          className="btn-edit-inline"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setCurrentExhibit(exh.id);
+                            setCurrentWindow('exhibit');
+                          }}
+                        >
+                          ✏️ 修改此展品
+                        </button>
+                      </div>
                       <div className="expand-section-title">标准讲解（{LANG_CODES.length} 种语言）</div>
                       <div className="detail-lang-grid">
                         {LANG_CODES.map((code) => (
@@ -952,6 +964,18 @@ function PreviewPanel() {
                   </div>
                   {isExpanded && (
                     <div className="route-table-expand">
+                      <div className="expand-row-actions">
+                        <button
+                          className="btn-edit-inline"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setCurrentExhibit(exh.id);
+                            setCurrentWindow('exhibit');
+                          }}
+                        >
+                          ✏️ 修改此展品
+                        </button>
+                      </div>
                       <div className="expand-row">
                         <div className="expand-label">标准讲解（{LANG_CODES.length} 种）</div>
                         <div className="detail-lang-grid">
@@ -1056,7 +1080,7 @@ function PreviewPanel() {
             <button className="btn-secondary" onClick={handleExportChecklist}>
               📝 导出讲解清单(CSV)
             </button>
-            <button className="btn-ghost" onClick={() => setCurrentWindow('edit')}>
+            <button className="btn-ghost" onClick={() => { setCurrentExhibit(null); setCurrentWindow('exhibit'); }}>
               ↩ 返回展品编辑
             </button>
           </div>
@@ -1081,7 +1105,7 @@ function PreviewPanel() {
                   className="tour-card"
                   onClick={() => {
                     setCurrentExhibit(exh.id);
-                    setCurrentWindow('edit');
+                    setCurrentWindow('exhibit');
                   }}
                 >
                   <div className="tour-card-number">{idx + 1}</div>
@@ -1261,8 +1285,8 @@ function PreviewPanel() {
                   ) : (
                     <>
                       <div className="history-header-bar">
-                        <span>共 {currentBatchHistory.length} 条记录（仅保留最近 50 条）</span>
-                        <button className="btn-small-ghost" onClick={clearExportBatchHistory}>清空记录</button>
+                        <span>共 {currentBatchHistory.length} 条记录（仅当前展览，全局最多保留最近 200 条）</span>
+                        <button className="btn-small-ghost" onClick={() => clearExportBatchHistory(currentExhibition.id)}>清空当前展览记录</button>
                       </div>
                       <div className="history-list">
                         {currentBatchHistory.map((b) => (

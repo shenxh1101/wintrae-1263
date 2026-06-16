@@ -54,7 +54,7 @@ interface StoreState extends AppState {
   getCurrentExhibit: () => Exhibit | undefined;
   exportBatchHistory: ExportBatchRecord[];
   addExportBatch: (batch: ExportBatchRecord) => void;
-  clearExportBatchHistory: () => void;
+  clearExportBatchHistory: (exhibitionId?: string) => void;
 }
 
 export const useAppStore = create<StoreState>()(
@@ -68,8 +68,13 @@ export const useAppStore = create<StoreState>()(
       exportBatchHistory: [],
 
       addExportBatch: (batch) =>
-        set((state) => ({ exportBatchHistory: [batch, ...state.exportBatchHistory].slice(0, 50) })),
-      clearExportBatchHistory: () => set({ exportBatchHistory: [] }),
+        set((state) => ({ exportBatchHistory: [batch, ...state.exportBatchHistory].slice(0, 200) })),
+      clearExportBatchHistory: (exhibitionId) =>
+        set((state) => ({
+          exportBatchHistory: exhibitionId
+            ? state.exportBatchHistory.filter((b) => b.exhibitionId !== exhibitionId)
+            : [],
+        })),
 
       setCurrentWindow: (window) => set({ currentWindow: window }),
       setCurrentExhibition: (id) => set({ currentExhibitionId: id, currentExhibitId: null }),
